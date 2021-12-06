@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Account{% endblock %}
+{% block head %}{% endblock %}
+{% block content %}
+
+<h1> Login</h1>
+<form class="form-text">
+    <input type="text" name="email" autofocus autocomplete="off" placeholder="Email">
+    <input type="text" name="password" autocomplete="off" placeholder="Password">
+    <button type="submit">login</button> 
+</form>
+
+<p>Don't have an account?<a href="/register">register</a></p>
+
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Account{% endblock %}
+{% block head %}{% endblock %}
+{% block content %}
+
+<h1>Register</h1>
+<form class="form-text" method="post" action="/register">
+    <input type="text" name="user_name" autofocus autocomplete="off" placeholder="User Name">
+    <input type="text" name="email" autocomplete="off" placeholder="Email">
+    <input type="text" name="password" autocomplete="off" placeholder="Password">
+    <input type="text" name="conf_password" autocomplete="off" placeholder="Confirm Password">
+    <button type="submit">Register</button> 
+</form>
+
+<p>Already have an account? <a href="/account">Login</a></p>
+
+
+{% endblock %}
