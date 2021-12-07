@@ -1,8 +1,4 @@
 import sqlite3
-import re
-import smtplib
-import logging
-import socket
 from flask import Flask, render_template, request
 from flask.wrappers import Request
 from validate_email_address import validate_email
