@@ -28,6 +28,16 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS users (
 )""")
 
 app = Flask(__name__)
+
+
+app.config['MAIL_SERVER']='smtp.googlemail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'musicpractice171@googlemail.com'
+app.config['MAIL_PASSWORD'] = 'pr4ct1c3!'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+
+
 mail = Mail(app)
 
 
@@ -50,6 +60,7 @@ def account():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
+       
         # check if user name provided
         if not request.form.get("user_name"):
             return error("You didn't provide a username")
@@ -59,21 +70,26 @@ def register():
         #  check if conf_password provided
         elif not request.form.get("conf_password"):
             return error("You didn't confirm your password")
+        
         else:
             # get the user name, email and passwords
             USER_NAME = request.form.get("user_name")
             EMAIL = request.form.get("email")
             PASSWORD = request.form.get("password")
             CONF_PASSWORD = request.form.get("conf_password")
+           
             # check if email is available
             cursor.execute("SELECT * FROM users WHERE email = ?", (EMAIL,))
             if cursor.fetchall():
-                return error("email already in use, maybe you misspelled your email, or you already have an account?")
+                # return error("email already in use, maybe you misspelled your email, or you already have an account?")
+                
+                x = 1 #because why not.... delete this later when you want to check emails in db again
+           
             else:
                 # check if password meets criteria
-                valid = password_check(PASSWORD)
-                if not valid[0]:
-                    return valid[1]
+                # valid = password_check(PASSWORD)
+                # if not valid[0]:
+                #     return valid[1]
                 # check if passwords match
                 if PASSWORD != CONF_PASSWORD:
                     return error("Passwords do not match")
@@ -82,17 +98,23 @@ def register():
                 # add user to database
                 cursor.execute("INSERT INTO users (user_name, email, date_joined, password) VALUES(?, ?, DATE(), ?)", (USER_NAME, EMAIL, PASSWORD))
                 connection.commit()
-                # check if the email is valid and activate the user
+                
+                # validate the email
                 token = generate_confirmation_token(EMAIL)
+                print("HERE'S YOUR TOKEN TOO BOSS: ", token)
                 confirm_url = url_for('confirm_email', token=token, _external=True)
+                print("AND DON'T FORGET YOUR CONFIRM_URL: ", confirm_url)
                 html = render_template('activate.html', confirm_url=confirm_url)
                 subject = "Please confirm your email"
+                print("DIDN'T CRASH: 1")
                 send_email(EMAIL, subject, html)
+                print("DIDN'T CRASH: 2")
 
                 login_user(user)
+                print("DIDN'T CRASH: 3")
 
                 flash('A confirmation email has been sent via email.', 'success')
-                
+                print("DIDN'T CRASH: 4")
                 return error("actually it's not an error, its working")
     else:
         return render_template("register.html")
@@ -151,6 +173,7 @@ def password_check(passwd):
 # validating emails via unique URLs
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(SECRET_KEY)
+    print("HERE'S YOUR SERIALIZER BOSS: ", serializer)
     return serializer.dumps(email, salt=SECURITY_PASSWORD_SALT)
 
 
@@ -168,13 +191,16 @@ def confirm_token(token, expiration=3600):
 
 # sending activation email
 def send_email(to, subject, template):
+    print("DIDN'T CRASH: 1.1")
     msg = Message(
         subject,
         recipients=[to],
         html=template,
-        sender=config.BaseConfig['MAIL_DEFAULT_SENDER']
+        sender=config.BaseConfig.MAIL_DEFAULT_SENDER,
     )
+    print("DIDN'T CRASH: 1.7")
     mail.send(msg)
+    print("DIDN'T CRASH: 1.8")
 
 
 

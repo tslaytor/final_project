@@ -20,12 +20,15 @@ class BaseConfig(object):
     # mail settings
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 465
-    MAIL_USE_TLS = True
-    MAIL_USE_SSL = False
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
 
     # gmail authentication
-    MAIL_USERNAME = os.environ['musicpractice171@googlemail.com']
-    MAIL_PASSWORD = os.environ['pr4ct1c3!']
+    # MAIL_USERNAME = os.environ['musicpractice171@googlemail.com']
+    # MAIL_PASSWORD = os.environ['pr4ct1c3!']
+
+    MAIL_USERNAME = 'musicpractice171@googlemail.com'
+    MAIL_PASSWORD = 'pr4ct1c3!'
 
     # mail accounts
     MAIL_DEFAULT_SENDER = 'musicpractice171@googlemail.com'
