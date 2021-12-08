@@ -11,7 +11,8 @@ from itsdangerous.serializer import Serializer
 from itsdangerous.url_safe import URLSafeSerializer, URLSafeTimedSerializer
 # from itsdangerous import URLSafeTimedSerializer
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
+# SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = "SECRET_KEY"
 s = Serializer(SECRET_KEY)
 SECURITY_PASSWORD_SALT = "im_a_rocket_man"
 
@@ -39,6 +40,10 @@ app.config['MAIL_USE_SSL'] = True
 
 
 mail = Mail(app)
+
+login_manager = LoginManager()
+
+login_manager.init_app(app)
 
 
 @app.route("/")
@@ -77,12 +82,14 @@ def register():
             EMAIL = request.form.get("email")
             PASSWORD = request.form.get("password")
             CONF_PASSWORD = request.form.get("conf_password")
+
+            user = User()
            
             # check if email is available
             cursor.execute("SELECT * FROM users WHERE email = ?", (EMAIL,))
             if cursor.fetchall():
                 # return error("email already in use, maybe you misspelled your email, or you already have an account?")
-                
+
                 x = 1 #because why not.... delete this later when you want to check emails in db again
            
             else:
@@ -101,18 +108,14 @@ def register():
                 
                 # validate the email
                 token = generate_confirmation_token(EMAIL)
-                print("HERE'S YOUR TOKEN TOO BOSS: ", token)
                 confirm_url = url_for('confirm_email', token=token, _external=True)
-                print("AND DON'T FORGET YOUR CONFIRM_URL: ", confirm_url)
                 html = render_template('activate.html', confirm_url=confirm_url)
                 subject = "Please confirm your email"
-                print("DIDN'T CRASH: 1")
                 send_email(EMAIL, subject, html)
-                print("DIDN'T CRASH: 2")
+                
 
                 login_user(user)
                 print("DIDN'T CRASH: 3")
-
                 flash('A confirmation email has been sent via email.', 'success')
                 print("DIDN'T CRASH: 4")
                 return error("actually it's not an error, its working")

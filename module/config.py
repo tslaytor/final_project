@@ -10,7 +10,7 @@ class BaseConfig(object):
 
     # main config
     SECRET_KEY = 'my_precious'
-    SECURITY_PASSWORD_SALT = 'my_precious_two'
+    SECURITY_PASSWORD_SALT = 'im_a_rocket_man'
     DEBUG = False
     BCRYPT_LOG_ROUNDS = 13
     WTF_CSRF_ENABLED = True
@@ -24,11 +24,14 @@ class BaseConfig(object):
     MAIL_USE_SSL = True
 
     # gmail authentication
-    MAIL_USERNAME = os.environ['APP_MAIL_USERNAME']
-    MAIL_PASSWORD = os.environ['APP_MAIL_PASSWORD']
+    # MAIL_USERNAME = os.environ['musicpractice171@googlemail.com']
+    # MAIL_PASSWORD = os.environ['pr4ct1c3!']
+
+    MAIL_USERNAME = 'musicpractice171@googlemail.com'
+    MAIL_PASSWORD = 'pr4ct1c3!'
 
     # mail accounts
-    MAIL_DEFAULT_SENDER = 'from@example.com'
+    MAIL_DEFAULT_SENDER = 'musicpractice171@googlemail.com'
 
 
 class DevelopmentConfig(BaseConfig):
@@ -58,4 +61,3 @@ class ProductionConfig(BaseConfig):
     STRIPE_PUBLISHABLE_KEY = 'bar'
 
 
-    
