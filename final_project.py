@@ -1,8 +1,19 @@
-testing a small change for git
 import sqlite3
-from flask import Flask, render_template, request
+import os
+import datetime
+import email
+from module import config
+from flask import Flask, render_template, request, url_for
+from flask_mail import Mail, Message
 from flask.wrappers import Request
 from validate_email_address import validate_email
+from itsdangerous.serializer import Serializer
+from itsdangerous.url_safe import URLSafeSerializer, URLSafeTimedSerializer
+# from itsdangerous import URLSafeTimedSerializer
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+s = Serializer(SECRET_KEY)
+SECURITY_PASSWORD_SALT = "im_a_rocket_man"
 
 connection = sqlite3.connect('final_project.db', check_same_thread=False)
 cursor = connection.cursor()
@@ -12,10 +23,13 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS users (
     user_name text NOT NULL,
     email text NOT NULL,
     password text NOT NULL,
-    date_joined DATE
+    date_joined DATE,
+    confirmed boolean DEFAULT False
 )""")
 
 app = Flask(__name__)
+mail = Mail(app)
+
 
 @app.route("/")
 def home():
@@ -55,16 +69,7 @@ def register():
             cursor.execute("SELECT * FROM users WHERE email = ?", (EMAIL,))
             if cursor.fetchall():
                 return error("email already in use, maybe you misspelled your email, or you already have an account?")
-            # check username is available
-            cursor.execute("SELECT * FROM users WHERE user_name = ?", (USER_NAME,))
-            if cursor.fetchall():
-                return error("Username already in use. Please choose another")
             else:
-                # check if the email is valid
-                print(f"What is the email? .... {EMAIL}")
-                print(f"The email is valid .... {validate_email(EMAIL)}")
-                if not validate_email(EMAIL):
-                    return error("Please provide a valid email address")
                 # check if password meets criteria
                 valid = password_check(PASSWORD)
                 if not valid[0]:
@@ -77,11 +82,38 @@ def register():
                 # add user to database
                 cursor.execute("INSERT INTO users (user_name, email, date_joined, password) VALUES(?, ?, DATE(), ?)", (USER_NAME, EMAIL, PASSWORD))
                 connection.commit()
+                # check if the email is valid and activate the user
+                token = generate_confirmation_token(EMAIL)
+                confirm_url = url_for('confirm_email', token=token, _external=True)
+                html = render_template('activate.html', confirm_url=confirm_url)
+                subject = "Please confirm your email"
+                send_email(EMAIL, subject, html)
+
+                login_user(user)
+
+                flash('A confirmation email has been sent via email.', 'success')
+                
                 return error("actually it's not an error, its working")
     else:
         return render_template("register.html")
 
-
+@app.route('/confirm/<token>')
+# @login_required
+def confirm_email(token):
+    try:
+        email = confirm_token(token)
+    except:
+        flash('The confirmation link is invalid or has expired.', 'danger')
+    user = User.query.filter_by(email=email).first_or_404()
+    if user.confirmed:
+        flash('Account already confirmed. Please login.', 'success')
+    else:
+        user.confirmed = True
+        user.confirmed_on = datetime.datetime.now()
+        db.session.add(user)
+        db.session.commit()
+        flash('You have confirmed your account. Thanks!', 'success')
+    return redirect('/')
 
 
 
@@ -115,3 +147,37 @@ def password_check(passwd):
 
     else:
         return (True,)
+
+# validating emails via unique URLs
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(SECRET_KEY)
+    return serializer.dumps(email, salt=SECURITY_PASSWORD_SALT)
+
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(SECRET_KEY)
+    try:
+        email = serializer.loads(
+            token,
+            salt=SECURITY_PASSWORD_SALT,
+            max_age=expiration
+        )
+    except:
+        return False
+    return email
+
+# sending activation email
+def send_email(to, subject, template):
+    msg = Message(
+        subject,
+        recipients=[to],
+        html=template,
+        sender=config.BaseConfig['MAIL_DEFAULT_SENDER']
+    )
+    mail.send(msg)
+
+
+
+
+
+        
