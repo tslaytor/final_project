@@ -3,22 +3,27 @@ import os
 import datetime
 import email
 from module import config
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request, url_for, redirect, session
 from flask_mail import Mail, Message
+from flask_session import Session
 from flask.wrappers import Request
-from validate_email_address import validate_email
+from tempfile import mkdtemp
 from itsdangerous.serializer import Serializer
 from itsdangerous.url_safe import URLSafeSerializer, URLSafeTimedSerializer
-# from itsdangerous import URLSafeTimedSerializer
+# this is my own library
+from support import error, password_check, login_required
 
 # SECRET_KEY = os.environ.get("SECRET_KEY")
 SECRET_KEY = "SECRET_KEY"
 s = Serializer(SECRET_KEY)
 SECURITY_PASSWORD_SALT = "im_a_rocket_man"
 
+
+# >>>>>>> user_session
+
+# create connection to SQL database, and create table if it doesn't exist
 connection = sqlite3.connect('final_project.db', check_same_thread=False)
 cursor = connection.cursor()
-
 cursor.execute("""CREATE TABLE IF NOT EXISTS users (
     id integer PRIMARY KEY,
     user_name text NOT NULL,
@@ -30,7 +35,6 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS users (
 
 app = Flask(__name__)
 
-
 app.config['MAIL_SERVER']='smtp.googlemail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'musicpractice171@googlemail.com'
@@ -38,44 +42,84 @@ app.config['MAIL_PASSWORD'] = 'pr4ct1c3!'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 
-
 mail = Mail(app)
 
-# login_manager = LoginManager()
-
-# login_manager.init_app(app)
+# Configure session to use filesystem (instead of signed cookies)
+app.config["SESSION_FILE_DIR"] = mkdtemp()
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+# >>>>>>> user_session
 
 
 @app.route("/")
+@login_required
 def home():
-    return render_template("index.html")
+    return render_template("index.html", user=session["user_id"])
 
 @app.route("/diary")
+@login_required
 def diary():
     return render_template("diary.html")
 
 @app.route("/account", methods=["GET", "POST"])
+@login_required
 def account():
     if request.method == "POST":
-        return render_template("account.html")
+        # update username
+        if request.form.get("change_username"):
+            cursor.execute("UPDATE users SET user_name = ? WHERE id = ?", (request.form.get("change_username"), session["user_id"]))
+            connection.commit()
+            return redirect("/account")
+
+        # update email
+        elif request.form.get("update_email"):
+            # check if email is available
+            cursor.execute("SELECT id FROM users WHERE email = ?", (request.form.get("update_email"),))
+            if cursor.fetchall():
+                return error("email is not available, double check email address typed correctly, or that you don't already have an account using this email")
+            # TO DO validate email
+            cursor.execute("UPDATE users SET email = ? WHERE id = ?", (request.form.get("update_email"), session["user_id"]))
+            connection.commit()
+            return redirect("/account")
+
+        # update password
+        elif request.form.get("update_password"):
+            if not request.form.get("update_password"):
+                # TODO change this error to javascript message
+                return error("Password field was blank")
+            elif not request.form.get("confirm_update_password"):
+                # TODO change this error to javascript message
+                return error("Confirm password field was blank")
+            elif request.form.get("update_password") != request.form.get("confirm_update_password"):
+                # TODO change this error to javascript message
+                return error("Passwords do not match")
+            # elif not password_check(request.form.get("update_password"))[0]:
+            #     return error("Password didn't pass the check")
+            else:
+                cursor.execute("UPDATE users SET password = ? WHERE id = ?", (request.form.get("update_password"), session["user_id"]))
+                connection.commit()
+                return redirect("/account")
+        else:
+            return redirect("/account")
+
     else:
-        return render_template("login.html")
+        cursor.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
+        USER = cursor.fetchall()[0]
+        return render_template("account.html", user_name=USER)
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-       
-        # check if user name provided
         if not request.form.get("user_name"):
             return error("You didn't provide a username")
-        #  check if password provided
+        elif not request.form.get("email"):
+            return error("You didn't provide an email")
         elif not request.form.get("password"):
             return error("You didn't provide a password")
-        #  check if conf_password provided
         elif not request.form.get("conf_password"):
             return error("You didn't confirm your password")
-        
         else:
             # get the user name, email and passwords
             USER_NAME = request.form.get("user_name")
@@ -88,11 +132,7 @@ def register():
             # check if email is available
             cursor.execute("SELECT * FROM users WHERE email = ?", (EMAIL,))
             if cursor.fetchall():
-                # return error("email already in use, maybe you misspelled your email, or you already have an account?")
-
-                x = 1 #because why not.... delete this later when you want to check emails in db again
-                return error("OK")
-           
+                return error("email already in use, maybe you misspelled your email, or you already have an account?")
             else:
                 # check if password meets criteria
                 # valid = password_check(PASSWORD)
@@ -106,6 +146,9 @@ def register():
                 # add user to database
                 cursor.execute("INSERT INTO users (user_name, email, date_joined, password) VALUES(?, ?, DATE(), ?)", (USER_NAME, EMAIL, PASSWORD))
                 connection.commit()
+                cursor.execute("SELECT * FROM users WHERE email = ?", EMAIL)
+                result = cursor.fetchall()
+                session["user_id"] = result[0][0]
                 
                 # validate the email
                 token = generate_confirmation_token(EMAIL)
@@ -113,15 +156,11 @@ def register():
                 html = render_template('activate.html', confirm_url=confirm_url)
                 subject = "Please confirm your email"
                 send_email(EMAIL, subject, html)
-                
-
-                # login_user(user)
-                print("DIDN'T CRASH: 3")
-                # flash('A confirmation email has been sent via email.', 'success')
-                print("DIDN'T CRASH: 4")
-                return error("actually it's not an error, its working")
+  
+                return error("Check your inbox for an email")
     else:
         return render_template("register.html")
+
 
 @app.route('/confirm/<token>')
 # @login_required
@@ -148,37 +187,38 @@ def confirm_email(token):
     return redirect('/')
 
 
-
-# function to show an error message
-def error(err_mess):
-        return render_template("error.html", message=err_mess)
-
-
-# function for checking password validity - slightly edit from source code from https://www.geeksforgeeks.org/password-validation-in-python/
-def password_check(passwd):
-      
-    SpecialSym =['$', '@', '#', '%', '!']
-      
-    if len(passwd) < 6:
-        return (False, error('Password length should be at least 6'))
-          
-    elif len(passwd) > 20:
-        return (False, error('Password length should be not be greater than 20'))
-          
-    elif not any(char.isdigit() for char in passwd):
-        return (False, error('Password should have at least one number'))
-          
-    elif not any(char.isupper() for char in passwd):
-        return (False, error('Password should have at least one uppercase letter'))
-          
-    elif not any(char.islower() for char in passwd):
-        return (False, error('Password should have at least one lowercase letter'))
-          
-    elif not any(char in SpecialSym for char in passwd):
-        return (False, error('Password should have at least one of the symbols $ @ # % !'))
-
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        return render_template("login.html")
     else:
-        return (True,)
+        # check form fields
+        if not request.form.get("email"):
+            return error("No email provided - redirecting")
+        if not request.form.get("password"):
+            return error("You must provide a password if you don't want to look like a cunt")
+        # check user exists
+        cursor.execute("SELECT * FROM users WHERE email = ?", (request.form.get("email"),))
+        user_info = cursor.fetchall()
+        if len(user_info) != 1:
+            return error("no user registered with this email - redirectin")
+        # check password is correct
+        elif request.form.get("password") != user_info[0][3]:
+            return error("Passwords don't match - redirectin")
+        else:
+            # remember who has logged in
+            session["user_id"] = user_info[0][0]
+            return redirect("/")
+        
+
+@app.route("/logout")
+def logout():
+    """Log user out"""
+    # Forget any user_id
+    session.clear()
+    # Redirect user to login form
+    return redirect("/")
+
 
 # validating emails via unique URLs
 def generate_confirmation_token(email):
@@ -213,7 +253,3 @@ def send_email(to, subject, template):
     print("DIDN'T CRASH: 1.8")
 
 
-
-
-
-        

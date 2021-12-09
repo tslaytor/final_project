@@ -4,13 +4,15 @@
 {% block content %}
 
 <h1> Login</h1>
-<form class="form-text">
+<form class="form-text" method="post" action="/login">
     <input type="text" name="email" autofocus autocomplete="off" placeholder="Email">
     <input type="text" name="password" autocomplete="off" placeholder="Password">
     <button type="submit">login</button> 
 </form>
 
 <p>Don't have an account?<a href="/register">register</a></p>
+
+<p>Forgot your password?<a href="/">reset password</a></p>
 
 
 {% endblock %}
