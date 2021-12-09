@@ -41,9 +41,9 @@ app.config['MAIL_USE_SSL'] = True
 
 mail = Mail(app)
 
-login_manager = LoginManager()
+# login_manager = LoginManager()
 
-login_manager.init_app(app)
+# login_manager.init_app(app)
 
 
 @app.route("/")
@@ -83,7 +83,7 @@ def register():
             PASSWORD = request.form.get("password")
             CONF_PASSWORD = request.form.get("conf_password")
 
-            user = User()
+            # user = User()
            
             # check if email is available
             cursor.execute("SELECT * FROM users WHERE email = ?", (EMAIL,))
@@ -91,6 +91,7 @@ def register():
                 # return error("email already in use, maybe you misspelled your email, or you already have an account?")
 
                 x = 1 #because why not.... delete this later when you want to check emails in db again
+                return error("OK")
            
             else:
                 # check if password meets criteria
@@ -114,9 +115,9 @@ def register():
                 send_email(EMAIL, subject, html)
                 
 
-                login_user(user)
+                # login_user(user)
                 print("DIDN'T CRASH: 3")
-                flash('A confirmation email has been sent via email.', 'success')
+                # flash('A confirmation email has been sent via email.', 'success')
                 print("DIDN'T CRASH: 4")
                 return error("actually it's not an error, its working")
     else:
@@ -125,19 +126,25 @@ def register():
 @app.route('/confirm/<token>')
 # @login_required
 def confirm_email(token):
+    print("HELLO!!!!!!!!: ", token)
     try:
         email = confirm_token(token)
+        print("EMAIL 1!!!!1!!!!!!: ", email)
     except:
         flash('The confirmation link is invalid or has expired.', 'danger')
-    user = User.query.filter_by(email=email).first_or_404()
-    if user.confirmed:
-        flash('Account already confirmed. Please login.', 'success')
+    # user = User.query.filter_by(email=email).first_or_404()
+    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+    user = cursor.fetchall()[0]
+    print("USER!!!: ", user)
+    if user[5] == 1:
+        # flash('Account already confirmed. Please login.', 'success')
+        return error("Account already confirmed. Please login")
     else:
-        user.confirmed = True
-        user.confirmed_on = datetime.datetime.now()
-        db.session.add(user)
-        db.session.commit()
-        flash('You have confirmed your account. Thanks!', 'success')
+        # user.confirmed_on = datetime.datetime.now()
+        cursor.execute("UPDATE users SET confirmed = 1 WHERE email = ?", (email,))
+        connection.commit()
+        # flash('You have confirmed your account. Thanks!', 'success')
+        return error("You have confirmed your account. Thanks")
     return redirect('/')
 
 
