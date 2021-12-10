@@ -2,6 +2,7 @@ import sqlite3
 import os
 import datetime
 import email
+from dotenv import dotenv_values, load_dotenv
 from module import config
 from flask import Flask, render_template, request, url_for, redirect, session
 from flask_mail import Mail, Message
@@ -17,6 +18,8 @@ from support import error, password_check, login_required, success
 SECRET_KEY = "SECRET_KEY"
 s = Serializer(SECRET_KEY)
 SECURITY_PASSWORD_SALT = "im_a_rocket_man"
+
+load_dotenv("/Users/thomas/final_project/PASSWORDS.env") 
 
 # create connection to SQL database, and create table if it doesn't exist
 connection = sqlite3.connect('final_project.db', check_same_thread=False)
@@ -35,9 +38,11 @@ app = Flask(__name__)
 app.config['MAIL_SERVER']='smtp.googlemail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'musicpractice171@googlemail.com'
-app.config['MAIL_PASSWORD'] = '*****!'
+app.config['MAIL_PASSWORD'] = os.environ["EMAIL_PASSWORD"]
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
+
+
 
 mail = Mail(app)
 
@@ -131,8 +136,6 @@ def register():
             EMAIL = request.form.get("email")
             PASSWORD = request.form.get("password")
             CONF_PASSWORD = request.form.get("conf_password")
-
-            # user = User()
            
             # check if email is available
             cursor.execute("SELECT * FROM users WHERE email = ?", (EMAIL,))
@@ -165,33 +168,29 @@ def register():
 
 
 @app.route('/confirm/<token>')
-# @login_required
 def confirm_email(token):
     print("HELLO!!!!!!!!: ", token)
     try:
         email = confirm_token(token)
         print("EMAIL 1!!!!1!!!!!!: ", email)
         if not email:
-            return error("Couldn't recognise email: T0DO RESEND VERIFICATION EMAIL")
+            return error("Couldn't recognise email - try to login again and resend email when prompted")
     except:
-        # flash('The confirmation link is invalid or has expired.', 'danger')
         error ("The confirmation link is invalid or has expired")
-    # user = User.query.filter_by(email=email).first_or_404()
     cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
     user = cursor.fetchall()[0]
     print("USER!!!: ", user)
     if user[5] == 1:
-        # flash('Account already confirmed. Please login.', 'success')
-        return error("Account already confirmed. Please login")
+        if session.get("user_id"):
+            return error("Account already confirmed, and you are already logged in")
+        else:
+            return error("Account already confirmed. Please login")
     else:
-        # user.confirmed_on = datetime.datetime.now()
         cursor.execute("UPDATE users SET confirmed = 1 WHERE email = ?", (email,))
         connection.commit()
-        # flash('You have confirmed your account. Thanks!', 'success')
         session["user_id"] = user[0]
         session["verified"] = True
         return success("You have confirmed your account. Thanks")
-    return redirect('/')
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -208,7 +207,7 @@ def login():
         cursor.execute("SELECT * FROM users WHERE email = ?", (request.form.get("email"),))
         user_info = cursor.fetchall()
         if len(user_info) != 1:
-            return error("no user registered with this email - redirectin")
+            return error("no user registered with this email - redirecting")
         # check password is correct
         elif request.form.get("password") != user_info[0][3]:
             return error("Passwords don't match - redirectin")
@@ -225,7 +224,10 @@ def login():
 @app.route("/resend", methods=["GET", "POST"])
 def resend():
     # validate the email
+    #  if session.get --- REDIRECT WITH ERROR MESSAGE IF THE SESSION[USER ID] IS INVALID SYNTAX
     email = cursor.execute("SELECT email FROM users WHERE id = ?", (session["user_id"],))
+    email = email.fetchall()[0][0]
+    print("email is_______!!!!!!!!!!!!_________: ", email)
     token = generate_confirmation_token(email)
     confirm_url = url_for('confirm_email', token=token, _external=True)
     html = render_template('activate.html', confirm_url=confirm_url)
@@ -239,7 +241,6 @@ def logout():
     """Log user out"""
     # Forget any user_id
     session.clear()
-    # Redirect user to login form
     return redirect("/")
 
 
@@ -269,7 +270,7 @@ def send_email(to, subject, template):
         subject,
         recipients=[to],
         html=template,
-        sender=config.BaseConfig.MAIL_DEFAULT_SENDER,
+        sender=app.config['MAIL_USERNAME'],
     )
     print("DIDN'T CRASH: 1.7")
     mail.send(msg)
