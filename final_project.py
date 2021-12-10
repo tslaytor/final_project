@@ -11,15 +11,12 @@ from tempfile import mkdtemp
 from itsdangerous.serializer import Serializer
 from itsdangerous.url_safe import URLSafeSerializer, URLSafeTimedSerializer
 # this is my own library
-from support import error, password_check, login_required
+from support import error, password_check, login_required, success
 
 # SECRET_KEY = os.environ.get("SECRET_KEY")
 SECRET_KEY = "SECRET_KEY"
 s = Serializer(SECRET_KEY)
 SECURITY_PASSWORD_SALT = "im_a_rocket_man"
-
-
-# >>>>>>> user_session
 
 # create connection to SQL database, and create table if it doesn't exist
 connection = sqlite3.connect('final_project.db', check_same_thread=False)
@@ -38,7 +35,7 @@ app = Flask(__name__)
 app.config['MAIL_SERVER']='smtp.googlemail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'musicpractice171@googlemail.com'
-app.config['MAIL_PASSWORD'] = 'pr4ct1c3!'
+app.config['MAIL_PASSWORD'] = '*****!'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 
@@ -49,7 +46,6 @@ app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-# >>>>>>> user_session
 
 
 @app.route("/")
@@ -78,9 +74,18 @@ def account():
             cursor.execute("SELECT id FROM users WHERE email = ?", (request.form.get("update_email"),))
             if cursor.fetchall():
                 return error("email is not available, double check email address typed correctly, or that you don't already have an account using this email")
+            
             # TO DO validate email
-            cursor.execute("UPDATE users SET email = ? WHERE id = ?", (request.form.get("update_email"), session["user_id"]))
-            connection.commit()
+            #  token = generate_confirmation_token(EMAIL)
+            # confirm_url = url_for('confirm_email', token=token, _external=True)
+            # html = render_template('activate.html', confirm_url=confirm_url)
+            # subject = "Please confirm your email"
+            # send_email(EMAIL, subject, html)
+
+            # cursor.execute("UPDATE users SET email = ?, confirmed = 0 WHERE id = ?", (request.form.get("update_email"), session["user_id"]))
+            # connection.commit()
+
+            # return success("Check your inbox for an email")
             return redirect("/account")
 
         # update password
@@ -146,10 +151,7 @@ def register():
                 # add user to database
                 cursor.execute("INSERT INTO users (user_name, email, date_joined, password) VALUES(?, ?, DATE(), ?)", (USER_NAME, EMAIL, PASSWORD))
                 connection.commit()
-                cursor.execute("SELECT * FROM users WHERE email = ?", EMAIL)
-                result = cursor.fetchall()
-                session["user_id"] = result[0][0]
-                
+
                 # validate the email
                 token = generate_confirmation_token(EMAIL)
                 confirm_url = url_for('confirm_email', token=token, _external=True)
@@ -157,7 +159,7 @@ def register():
                 subject = "Please confirm your email"
                 send_email(EMAIL, subject, html)
   
-                return error("Check your inbox for an email")
+                return success("Check your inbox for an email")
     else:
         return render_template("register.html")
 
@@ -169,8 +171,11 @@ def confirm_email(token):
     try:
         email = confirm_token(token)
         print("EMAIL 1!!!!1!!!!!!: ", email)
+        if not email:
+            return error("Couldn't recognise email: T0DO RESEND VERIFICATION EMAIL")
     except:
-        flash('The confirmation link is invalid or has expired.', 'danger')
+        # flash('The confirmation link is invalid or has expired.', 'danger')
+        error ("The confirmation link is invalid or has expired")
     # user = User.query.filter_by(email=email).first_or_404()
     cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
     user = cursor.fetchall()[0]
@@ -183,7 +188,9 @@ def confirm_email(token):
         cursor.execute("UPDATE users SET confirmed = 1 WHERE email = ?", (email,))
         connection.commit()
         # flash('You have confirmed your account. Thanks!', 'success')
-        return error("You have confirmed your account. Thanks")
+        session["user_id"] = user[0]
+        session["verified"] = True
+        return success("You have confirmed your account. Thanks")
     return redirect('/')
 
 
@@ -205,11 +212,27 @@ def login():
         # check password is correct
         elif request.form.get("password") != user_info[0][3]:
             return error("Passwords don't match - redirectin")
+        elif user_info[0][5] == False:
+            session["user_id"] = user_info[0][0]
+            session["verified"] = False
+            return render_template("resend_verification.html", email=user_info[0][2])
         else:
             # remember who has logged in
             session["user_id"] = user_info[0][0]
+            session["verified"] = True
             return redirect("/")
-        
+
+@app.route("/resend", methods=["GET", "POST"])
+def resend():
+    # validate the email
+    email = cursor.execute("SELECT email FROM users WHERE id = ?", (session["user_id"],))
+    token = generate_confirmation_token(email)
+    confirm_url = url_for('confirm_email', token=token, _external=True)
+    html = render_template('activate.html', confirm_url=confirm_url)
+    subject = "Please confirm your email"
+    send_email(email, subject, html)
+
+    return success("Check your inbox for an email")           
 
 @app.route("/logout")
 def logout():

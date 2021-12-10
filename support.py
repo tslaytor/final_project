@@ -5,6 +5,9 @@ from functools import wraps
 def error(err_mess):
         return render_template("error.html", message=err_mess), {"Refresh": "2; url=/"}
 
+def success(succ_mess):
+        return render_template("success.html", message=succ_mess), {"Refresh": "2; url=/"}
+
 def login_required(f):
     """
     Decorate routes to require login.
@@ -13,7 +16,7 @@ def login_required(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("user_id") is None:
+        if session.get("user_id") is None or session["verified"] is False:
             return redirect("/login")
         return f(*args, **kwargs)
     return decorated_function
