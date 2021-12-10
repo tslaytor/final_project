@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block title %}Resend Verification{% endblock %}
+{% block head %}{% endblock %}
+{% block content %}
+
+<h1> Resend Verification</h1>
+<p>You have not verified your email. Please click the link in the email we sent you, or click the button below to resend the verification email to {{ email }}</p>
+<form method="post" action="/resend">
+    <button type="submit">Resend</button> 
+</form>
+
+<p>To login to a different account, please return to the <a href="/login">login page</a></p>
+
+
+{% endblock %}
