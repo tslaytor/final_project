@@ -2,7 +2,12 @@
 {% block title %}Index{% endblock %}
 {% block head %}{% endblock %}
 {% block content %}
-
-<h1>ERROR: {{ message }}</h1>
+<div style="display: flex; flex-direction:column; justify-content: center">
+	<div style="text-align: center"; >
+		<h2 class="heading-section" style="color: red">ERROR<br>{{ message }}</h2>
+		<p><a style="color: blue" href="/">RETURN</a></p>
+	</div>
+	<div id="error"></div>
+</div>
 
 {% endblock %}

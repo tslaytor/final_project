@@ -3,7 +3,7 @@ from functools import wraps
 
 # function to show an error message
 def error(err_mess):
-        return render_template("error.html", message=err_mess), {"Refresh": "2; url=/"}
+        return render_template("error.html", message=err_mess)
 
 def success(succ_mess):
         return render_template("success.html", message=succ_mess), {"Refresh": "2; url=/"}

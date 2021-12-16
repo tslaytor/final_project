@@ -1,0 +1,35 @@
+# create connection to SQL database, and create table if it doesn't exist
+connection = sqlite3.connect('final_project.db', check_same_thread=False)
+cursor = connection.cursor()
+
+# create user table
+cursor.execute("""CREATE TABLE IF NOT EXISTS users (
+    id integer PRIMARY KEY,
+    user_name text NOT NULL,
+    email text NOT NULL,
+    password text NOT NULL,
+    date_joined DATE,
+    confirmed boolean DEFAULT False
+)""")
+
+# create content table
+cursor.execute("""CREATE TABLE IF NOT EXISTS content (
+    id integer PRIMARY KEY,
+    title text NOT NULL
+)""")
+
+# create library table
+cursor.execute("""CREATE TABLE IF NOT EXISTS library (
+    user_id integer FORIGN KEY references users(id),
+    content_id integer FORIGN KEY references content(id)
+)""")
+
+# create diary table
+cursor.execute("""CREATE TABLE IF NOT EXISTS diary (
+    id integer PRIMARY KEY,
+    user_id integer FORIGN KEY references users(id),
+    content_id integer FORIGN KEY references content(id),
+    tempo integer NOT NULL (tempo between 30 and 300),
+    rate integer NOT NULL (rate between 1 and 5),
+    date integer NOT NULL
+)""")

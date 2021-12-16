@@ -5,6 +5,16 @@
 
 <h1> Diary</h1>
 <form class="form-text">
+    <select name="content">
+  
+		{% for row in TITLES %}
+		<option>
+			{{ row[0] }}
+		</option>
+		{% endfor %}
+    	
+    </select>
+    <input type="text">
     <input type="text">
 </form>
 

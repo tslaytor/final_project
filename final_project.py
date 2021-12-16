@@ -3,7 +3,7 @@ import os
 import datetime
 import email
 from dotenv import dotenv_values, load_dotenv
-from module import config
+# from module import config
 from flask import Flask, render_template, request, url_for, redirect, session
 from flask_mail import Mail, Message
 from flask_session import Session
@@ -24,13 +24,35 @@ load_dotenv("/Users/thomas/final_project/PASSWORDS.env")
 # create connection to SQL database, and create table if it doesn't exist
 connection = sqlite3.connect('final_project.db', check_same_thread=False)
 cursor = connection.cursor()
+
 cursor.execute("""CREATE TABLE IF NOT EXISTS users (
     id integer PRIMARY KEY,
     user_name text NOT NULL,
     email text NOT NULL,
     password text NOT NULL,
-    date_joined DATE,
+    date_joined DATE NOT NULL,
     confirmed boolean DEFAULT False
+)""")
+
+# create content table
+cursor.execute("""CREATE TABLE IF NOT EXISTS content (
+    id integer PRIMARY KEY,
+    title text NOT NULL
+)""")
+
+# create library table
+cursor.execute("""CREATE TABLE IF NOT EXISTS library (
+    user_id integer FORIGN KEY references users(id),
+    content_id integer FORIGN KEY references content(id)
+)""")
+
+# create diary table
+cursor.execute("""CREATE TABLE IF NOT EXISTS diary (
+    user_id integer FORIGN KEY references users(id),
+    content_id integer FORIGN KEY references content(id),
+    tempo integer NOT NULL CHECK (30 <= tempo <= 300),
+    rate integer NOT NULL CHECK (1 <= rate <= 5),
+    date DATE NOT NULL
 )""")
 
 app = Flask(__name__)
@@ -61,7 +83,10 @@ def home():
 @app.route("/diary")
 @login_required
 def diary():
-    return render_template("diary.html")
+    cursor.execute("SELECT title FROM content")
+    titles = cursor.fetchall()
+    print(titles)
+    return render_template("diary.html", TITLES=titles)
 
 @app.route("/account", methods=["GET", "POST"])
 @login_required
@@ -207,7 +232,7 @@ def login():
         cursor.execute("SELECT * FROM users WHERE email = ?", (request.form.get("email"),))
         user_info = cursor.fetchall()
         if len(user_info) != 1:
-            return error("no user registered with this email - redirecting")
+            return error("No user registered with this email")
         # check password is correct
         elif request.form.get("password") != user_info[0][3]:
             return error("Passwords don't match - redirectin")
@@ -239,7 +264,6 @@ def resend():
 @app.route("/logout")
 def logout():
     """Log user out"""
-    # Forget any user_id
     session.clear()
     return redirect("/")
 
@@ -274,6 +298,6 @@ def send_email(to, subject, template):
     )
     print("DIDN'T CRASH: 1.7")
     mail.send(msg)
-    print("DIDN'T CRASH: 1.8")
+    print("DIDN'T CRASH: 1.8 - EMAIL SENT")
 
 
