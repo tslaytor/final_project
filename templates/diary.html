@@ -2,23 +2,43 @@
 {% block title %}Diary{% endblock %}
 {% block head %}{% endblock %}
 {% block content %}
+<body class="img" id="tony_williams">
+	<h1 style="color: white;"> Diary</h1>
+	<section class="ftco-section"> 
 
-<h1> Diary</h1>
-<form class="form-text">
-    <select name="content">
-  
-		{% for row in TITLES %}
-		<option>
-			{{ row[0] }}
-		</option>
-		{% endfor %}
-    	
-    </select>
-    <input type="text">
-    <input type="text">
-</form>
+		<form action="/diary" method="post" class="testy">
+			
+			<select name="content"  class="form-control control-the-form">
+				<option disabled selected value="">What did you practice?</option>
+				{% for row in TITLES %}
+					<option>
+						{{ row[0] }}
+					</option>
+				{% endfor %}
+			</select>
 
+			<select name="tempo" class="form-control control-the-form max-content">
+				<option disabled selected>Tempo</option>
+				{% for n in range(30, 301) %}
+				<option>
+					{{ n }} bpm
+				</option>
+				{% endfor %}
+			</select>
 
+		
+			<select name="rating" class="form-control control-the-form max-content" name="">
+				<option disabled selected>Rating</option>
+				{% for n in range(1, 6) %}
+				<option>
+					{{ n }} stars
+				</option>
+				{% endfor %}
+			</select>
 
-
+			<input type="text" placeholder="Notes..." class="form-control control-the-form" name="notes"></input>
+			<button type="submit" class="form-control btn btn-primary submit px-3 control-the-form max-content bigger">+</input>
+		</form>
+	</section>
+</body>
 {% endblock %}

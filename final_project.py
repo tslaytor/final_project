@@ -75,18 +75,59 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 
+
 @app.route("/")
-@login_required
+
 def home():
+    
+    #####################################
+    # HACK TO LET ME NOT LOGGIN EVERYTIME  # DELETE LATER
+    session["user_id"] = 1
+    session["verified"] = True
+    # HACK TO LET ME NOT LOGGIN EVERYTIME # DELETE LATER
+    ######################################
+   
     return render_template("index.html", user=session["user_id"])
 
-@app.route("/diary")
+@app.route("/diary", methods=["GET", "POST"])
 @login_required
 def diary():
-    cursor.execute("SELECT title FROM content")
-    titles = cursor.fetchall()
-    print(titles)
-    return render_template("diary.html", TITLES=titles)
+    if request.method == "POST":
+
+        print('--- original order ---')
+        # get all the values in one go
+        a = {}
+        a["content"] = request.form.get("content")
+        a["tempo"] = request.form.get("tempo")
+        a["rating"] = request.form.get("rating")
+        a["notes"] = request.form.get("notes")
+
+        cursor.execute("""INSERT INTO diary 
+            (date,
+            user_id,
+            content,
+            tempo,
+            rating,
+            notes) 
+        VALUES (DATE(), ?, ?, ?, ?, ?);""", (session["user_id"], a["content"], a["tempo"], a["rating"], a["notes"] ))
+        connection.commit()
+
+        print('--- sorted ---')
+
+        keys = request.form.keys()
+        keys = sorted(keys)
+
+        for key in keys:
+            #print(key, request.form[key])
+            print(key, request.form.get(key))
+
+        cursor.execute("SELECT title FROM content")
+        titles = cursor.fetchall()
+        return render_template("diary.html", TITLES=titles)
+    else:
+        cursor.execute("SELECT title FROM content")
+        titles = cursor.fetchall()
+        return render_template("diary.html", TITLES=titles)
 
 @app.route("/account", methods=["GET", "POST"])
 @login_required
