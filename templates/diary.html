@@ -4,13 +4,19 @@
 {% block content %}
 <body class="img" id="tony_williams">
 	<h1 style="color: white;"> Diary</h1>
-	<section class="ftco-section"> 
 
-		<form action="/diary" method="post" class="testy">
+	<form action="/add_content" method="POST"> 
+		<input type="text" name="new_content" autocomplete="off">
+		<button  type="submit" >Add new content</button>
+	</form>
+	
+
+	<div>
+		<form action="/diary" method="post" class="testy" style="background-color: rgb(32, 32, 32);">
 			
 			<select name="content"  class="form-control control-the-form">
 				<option disabled selected value="">What did you practice?</option>
-				{% for row in TITLES %}
+				{% for row in content %}
 					<option>
 						{{ row[0] }}
 					</option>
@@ -36,9 +42,47 @@
 				{% endfor %}
 			</select>
 
-			<input type="text" placeholder="Notes..." class="form-control control-the-form" name="notes"></input>
+			<input type="text" placeholder="Notes..." class="form-control control-the-form" name="notes" autocomplete="off"></input>
 			<button type="submit" class="form-control btn btn-primary submit px-3 control-the-form max-content bigger">+</input>
 		</form>
-	</section>
+	</div>
+	
+
+
+
+	<div>
+		<table class="table-container testy">
+			<tbody class="mytab">
+
+				{% for rows in diary %}
+				<div class="fuck">
+						
+						<tr class="testy" style="width: 100%; background-color: black; ">
+				
+					
+						<td class=" flex-row form-control control-the-form " style="width: 40%">
+							{{ rows[0] }}
+						</td>
+						<td class="flex-row form-control control-the-form " style="width: 9%">
+							{{ rows[1] }} bpm
+						</td>
+						<td class="flex-row form-control control-the-form " style="width: 8%">
+							{{ rows[2] }}	
+						</td>
+						<td class="flex-row form-control control-the-form flex-row"  style="width: 43%">
+							{{ rows[3] }}
+						</td>
+				
+					</tr>
+				</div>
+				
+				{% endfor %}
+
+			</tbody>
+			
+		</table>
+	</div>
+
+</div>
 </body>
 {% endblock %}
