@@ -3,29 +3,32 @@
 {% block head %}{% endblock %}
 {% block content %}
 
-<h1> Account - you are logged in as {{ user_name }}!</h1>
+<div>
+<h1 style="color: white;" class="text-center"> Account - you are logged in as {{ user_name }}!</h1>
 <h4><a href="/logout">Logout</a></h4>
 
 <!-- change username -->
 <p>Change username</p>
-<form class="form-text" method="post" action="/account">
-    <input type="text" name="change_username" autofocus autocomplete="off" placeholder="New username">
+<form class="form-text" method="post" action="/account" class="testy">
+    <input type="text" name="change_username" autofocus autocomplete="off" placeholder="New username" class="form-control">
     <button type="submit">Change username</button> 
 </form>
 
 <!-- change email -->
 <p>Update email</p>
-<form class="form-text" method="post" action="/account">
-    <input type="text" name="update_email" autofocus autocomplete="off" placeholder="New email">
+<form class="form-text" method="post" action="/account" class="testy">
+    <input type="text" name="update_email" autofocus autocomplete="off" placeholder="New email" class="form-control">
     <button type="submit">Update email</button> 
 </form>
 
 <!-- change password -->
 <p>Update password</p>
-<form class="form-text" method="post" action="/account">
-    <input type="text" name="update_password" autofocus autocomplete="off" placeholder="New password">
-    <input type="text" name="confirm_update_password" autofocus autocomplete="off" placeholder="Confirm new password">
+<form class="form-text" method="post" action="/account" class="testy">
+    <input type="text" name="update_password" autofocus autocomplete="off" placeholder="New password" class="form-control">
+    <input type="text" name="confirm_update_password" autofocus autocomplete="off" placeholder="Confirm new password" class="form-control">
     <button type="submit">Update password</button> 
 </form>
+
+</div>
 
 {% endblock %}

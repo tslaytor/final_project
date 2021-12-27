@@ -113,7 +113,7 @@ def home():
     # HACK TO LET ME NOT LOGGN EVERYTIME # DELETE LATER
     ######################################
    
-    return render_template("index.html", user=session["user_id"])
+    return redirect("/diary")
 
 # ----------------------------------------------------
 # ROUTE - ADD NEW CONTENT TO CONTENT AND/OR LIBRARY TABLES
@@ -158,8 +158,15 @@ def add_content():
 # DIARY ROUTE - DISPLAYS DROPDOWN OF USER'S LIBRARY AND TABLE OF USER'S DIARY TABLE
 # --------------------------------------------------------------------------------
 @app.route("/diary", methods=["GET", "POST"])
-@login_required
+# @login_required
 def diary():
+
+    #####################################
+    # HACK TO LET ME NOT LOGGIN EVERYTIME  # DELETE LATER
+    session["user_id"] = 1
+    session["verified"] = True
+    # HACK TO LET ME NOT LOGGN EVERYTIME # DELETE LATER
+    ######################################
 
     if request.method == "POST":
         
@@ -222,8 +229,10 @@ def diary():
                         FROM diary 
                         JOIN content ON content.id = diary.content_id 
                         JOIN rating on rating.id = diary.rating_id
-                        ORDER BY diary.id DESC""")
+                        WHERE diary.user_id = ?
+                        ORDER BY diary.id DESC""", (session["user_id"],))
         DIARY = cursor.fetchall()
+        print("DIARY IS THIS: ", DIARY)
      
         # RETURN RENDER TEMPLATE
         return render_template("diary.html", content=CONTENT, diary=DIARY,)
@@ -235,7 +244,8 @@ def diary():
                         FROM diary 
                         JOIN content ON content.id = diary.content_id 
                         JOIN rating on rating.id = diary.rating_id
-                        ORDER BY diary.id DESC""")
+                        WHERE diary.user_id = ?
+                        ORDER BY diary.id DESC""", (session["user_id"],))
         DIARY = cursor.fetchall()
         
         cursor.execute("""SELECT title FROM content 
