@@ -11,6 +11,7 @@ from flask.wrappers import Request
 from tempfile import mkdtemp
 from itsdangerous.serializer import Serializer
 from itsdangerous.url_safe import URLSafeSerializer, URLSafeTimedSerializer
+from datetime import date
 # this is my own library
 from support import error, password_check, login_required, success
 
@@ -205,10 +206,10 @@ def diary():
         # if color:
         #     # if DATE() != lastRecordedDate:
         #     if 1 != 2:
-        #         if color[0] == "blue":
-        #             color[0] == "red"
+        #         if color[0] == "black":
+        #             color[0] == "white"
         #         else:
-        #             color[0] == "blue"
+        #             color[0] == "black"
         # else:
         #     color.append("blue")
         
@@ -217,30 +218,12 @@ def diary():
         VALUES (DATE(), ?, ?, ?, ?, ?)""", (session["user_id"], content_id, tempo, rating_id, a["notes"]))
         connection.commit()
 
-       
-        # GET INFORMATION NEEDED FOR RENDER TEMPLATE
-        cursor.execute("""SELECT title FROM content 
-                            JOIN library ON content.id = library.content_id  
-                            WHERE library.user_id = ?""", (session["user_id"],))
-        CONTENT = cursor.fetchall()
-        
-        cursor.execute("""SELECT 
-                        content.title, diary.tempo, rating.rating, diary.notes, diary.color
-                        FROM diary 
-                        JOIN content ON content.id = diary.content_id 
-                        JOIN rating on rating.id = diary.rating_id
-                        WHERE diary.user_id = ?
-                        ORDER BY diary.id DESC""", (session["user_id"],))
-        DIARY = cursor.fetchall()
-        print("DIARY IS THIS: ", DIARY)
-     
-        # RETURN RENDER TEMPLATE
-        return render_template("diary.html", content=CONTENT, diary=DIARY,)
+        return redirect("/diary")
     
     else:
         # GET INFORMATION NEEDED FOR RENDER TEMPLATE
         cursor.execute("""SELECT
-                        content.title, diary.tempo, rating.rating, diary.notes
+                        diary.date, content.title, diary.tempo, rating.rating, diary.notes
                         FROM diary 
                         JOIN content ON content.id = diary.content_id 
                         JOIN rating on rating.id = diary.rating_id
@@ -252,7 +235,9 @@ def diary():
                             JOIN library ON content.id = library.content_id  
                             WHERE library.user_id = ?""", (session["user_id"],))
         CONTENT = cursor.fetchall()
-        return render_template("diary.html", diary=DIARY, content=CONTENT)
+
+        TODAY = str(date.today())
+        return render_template("diary.html", diary=DIARY, content=CONTENT, today=TODAY)
 
 
 # -------------

@@ -3,32 +3,40 @@
 {% block head %}{% endblock %}
 {% block content %}
 
-<div>
-<h1 style="color: white;" class="text-center"> Account - you are logged in as {{ user_name }}!</h1>
-<h4><a href="/logout">Logout</a></h4>
+<section class="ftco-section"> 
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6 col-lg-4">
 
-<!-- change username -->
-<p>Change username</p>
-<form class="form-text" method="post" action="/account" class="testy">
-    <input type="text" name="change_username" autofocus autocomplete="off" placeholder="New username" class="form-control">
-    <button type="submit">Change username</button> 
-</form>
+				<div class="login-wrap p-0">
 
-<!-- change email -->
-<p>Update email</p>
-<form class="form-text" method="post" action="/account" class="testy">
-    <input type="text" name="update_email" autofocus autocomplete="off" placeholder="New email" class="form-control">
-    <button type="submit">Update email</button> 
-</form>
+					<h3 class="mb-4 text-center">Account</h3>
+					<form action="" method="post" class="signin-form"> <!-- NO CLASS CALLED SIGNIN-FORM -->
+						<h3 class="mb-4 text-center">Change Username</h3>
+                        <div class="form-group">
+							<input type="text" class="form-control" name="change_username" placeholder="New username" autocomplete="off" required>
+                            <button type="submit" class="form-control btn btn-primary submit px-3">Change Username</button>
+                        </div>
+                        <h3 class="mb-4 text-center">Update Email</h3>
+						<div class="form-group">
+							<input type="text" class="form-control" name="update_email" placeholder="New email" autocomplete="off" required>
+                            <button type="submit" class="form-control btn btn-primary submit px-3">Update Email</button>
+                        </div>
+                        <h3 class="mb-4 text-center">Change Password</h3>
+						<div class="form-group">
+							<input id="password-field" type="password" class="form-control" name="update_password" placeholder="Password" required>
+						</div>
+						<div class="form-group">
+							<input id="password-field" type="password" class="form-control" name="confirm_update_password" placeholder="Confirm Password" required>
+                            <button type="submit" class="form-control btn btn-primary submit px-3">Update Password</button>
+                        </div>
+			
+					</form>
 
-<!-- change password -->
-<p>Update password</p>
-<form class="form-text" method="post" action="/account" class="testy">
-    <input type="text" name="update_password" autofocus autocomplete="off" placeholder="New password" class="form-control">
-    <input type="text" name="confirm_update_password" autofocus autocomplete="off" placeholder="Confirm new password" class="form-control">
-    <button type="submit">Update password</button> 
-</form>
-
-</div>
-
+				</div>
+				
+			</div>
+		</div>
+	</div>
+</section>
 {% endblock %}
