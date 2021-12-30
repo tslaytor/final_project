@@ -13,7 +13,7 @@ from itsdangerous.serializer import Serializer
 from itsdangerous.url_safe import URLSafeSerializer, URLSafeTimedSerializer
 from datetime import date
 # this is my own library
-from support import error, password_check, login_required, success
+from support import error, password_check, login_required, success, success_acc
 
 
 # SECRET_KEY = os.environ.get("SECRET_KEY") # TODO FIX SECRET KEY
@@ -22,7 +22,7 @@ s = Serializer(SECRET_KEY) # TODO WHEN DO I USE S?
 SECURITY_PASSWORD_SALT = "im_a_rocket_man" # TODO - IMPROVE THE SECURITY OF SALT
 
 
-load_dotenv("/Users/thomas/final_project/PASSWORDS.env") # TODO REMIND YOURSELF WHAT THIS DOES AGAIN
+load_dotenv("/Users/thomas/final_project/PASSWORDS.env")
 
 # CREATE CONNECTION TO SQL DATABASE - AND CREATE TABLES
 connection = sqlite3.connect('final_project.db', check_same_thread=False)
@@ -105,7 +105,7 @@ Session(app)
 # HOME ROUTE
 # -----------
 @app.route("/")
-# @login_required
+@login_required
 def home():
     #####################################
     # HACK TO LET ME NOT LOGGIN EVERYTIME  # DELETE LATER
@@ -251,26 +251,27 @@ def account():
         if request.form.get("change_username"):
             cursor.execute("UPDATE users SET user_name = ? WHERE id = ?", (request.form.get("change_username"), session["user_id"]))
             connection.commit()
-            return redirect("/account")
+            return success_acc("You updated your username")
         # update email
         elif request.form.get("update_email"):
             # check if email is available
-            cursor.execute("SELECT id FROM users WHERE email = ?", (request.form.get("update_email"),))
+            EMAIL = request.form.get("update_email")
+            cursor.execute("SELECT id FROM users WHERE email = ?", (EMAIL,))
             if cursor.fetchall():
                 return error("email is not available, double check email address typed correctly, or that you don't already have an account using this email")
             
             # TO DO validate email
-            #  token = generate_confirmation_token(EMAIL)
-            # confirm_url = url_for('confirm_email', token=token, _external=True)
-            # html = render_template('activate.html', confirm_url=confirm_url)
-            # subject = "Please confirm your email"
-            # send_email(EMAIL, subject, html)
+            token = generate_confirmation_token(EMAIL)
+            confirm_url = url_for('confirm_email', token=token, _external=True)
+            html = render_template('activate.html', confirm_url=confirm_url)
+            subject = "Please confirm your email"
+            send_email(EMAIL, subject, html)
 
-            # cursor.execute("UPDATE users SET email = ?, confirmed = 0 WHERE id = ?", (request.form.get("update_email"), session["user_id"]))
-            # connection.commit()
+            cursor.execute("UPDATE users SET email = ?, confirmed = 0 WHERE id = ?", (request.form.get("update_email"), session["user_id"]))
+            connection.commit()
 
-            # return success("Check your inbox for an email")
-            return redirect("/account")
+            return success_acc("Check your inbox for an email")
+            # return redirect("/account")
 
         # update password
         elif request.form.get("update_password"):
@@ -289,14 +290,14 @@ def account():
             else:
                 cursor.execute("UPDATE users SET password = ? WHERE id = ?", (request.form.get("update_password"), session["user_id"]))
                 connection.commit()
-                return redirect("/account")
+                return success_acc("Your password has been updated")
         else:
             return redirect("/account")
 
     else:
         cursor.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
         USER = cursor.fetchall()[0]
-        return render_template("account.html", user_name=USER)
+        return render_template("account.html", user=USER)
 
 
 # --------------
@@ -395,6 +396,8 @@ def login():
         # check user exists
         cursor.execute("SELECT * FROM users WHERE email = ?", (request.form.get("email"),))
         user_info = cursor.fetchall()
+        print("OOFOFOFOF = ", user_info)
+        print("lenl len len = ", len(user_info))
         if len(user_info) != 1:
             return error("No user registered with this email")
         # check password is correct
