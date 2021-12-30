@@ -8,6 +8,9 @@ def error(err_mess):
 def success(succ_mess):
         return render_template("success.html", message=succ_mess), {"Refresh": "2; url=/"}
 
+def success_acc(succ_mess):
+        return render_template("success.html", message=succ_mess), {"Refresh": "2; url=/account"}
+
 def login_required(f):
     """
     Decorate routes to require login.
