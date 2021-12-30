@@ -2,41 +2,63 @@
 {% block title %}Account{% endblock %}
 {% block head %}{% endblock %}
 {% block content %}
-
-<section class="ftco-section"> 
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6 col-lg-4">
-
-				<div class="login-wrap p-0">
-
-					<h3 class="mb-4 text-center">Account</h3>
-					<form action="" method="post" class="signin-form"> <!-- NO CLASS CALLED SIGNIN-FORM -->
-						<h3 class="mb-4 text-center">Change Username</h3>
-                        <div class="form-group">
-							<input type="text" class="form-control" name="change_username" placeholder="New username" autocomplete="off" required>
-                            <button type="submit" class="form-control btn btn-primary submit px-3">Change Username</button>
-                        </div>
-                        <h3 class="mb-4 text-center">Update Email</h3>
-						<div class="form-group">
-							<input type="text" class="form-control" name="update_email" placeholder="New email" autocomplete="off" required>
-                            <button type="submit" class="form-control btn btn-primary submit px-3">Update Email</button>
-                        </div>
-                        <h3 class="mb-4 text-center">Change Password</h3>
-						<div class="form-group">
-							<input id="password-field" type="password" class="form-control" name="update_password" placeholder="Password" required>
-						</div>
-						<div class="form-group">
-							<input id="password-field" type="password" class="form-control" name="confirm_update_password" placeholder="Confirm Password" required>
-                            <button type="submit" class="form-control btn btn-primary submit px-3">Update Password</button>
-                        </div>
-			
-					</form>
-
-				</div>
-				
+<div class="container">
+	<div class="row justify-content-center">
+		<div class="col-md-6 col-lg-4">
+			<div class="login-wrap p-0">
+				<h3 class="mb-4 text-center" style="color:white">Account</h3>
 			</div>
 		</div>
+	</div>
+</div>
+<section class="ftco-section"> 
+
+	<div class="container2">
+		<div class="login-wrap p-0">
+			<div class="boxl">
+				<div class="row justify-content-center">
+					<div class="">
+						<h3 class="mb-4 text-center">Account Details</h3>
+						<h3 class="mb-4 text-center"><b>Username:</b> {{ user[1] }}</h3>
+						<h3 class="mb-4 text-center"><b>Email:</b> {{ user[2] }}</h3>
+						<h3 class="mb-3 text-center"> <b>Member Since:</b> {{ user[4]}}</h3>
+						<div class="form-group">
+							<a href="/logout"><button type="submit" action="/logout" class="form-control btn btn-primary submit px-3">Logout</button></a>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="boxr">
+				<div class="row justify-content-center">
+				
+							<form action="/account" method="post" class="signin-form"> <!-- NO CLASS CALLED SIGNIN-FORM -->
+								<h3 class="mb-4 text-center">Change Details</h3>
+								<p class="mb-4 text-center">Change Username</p>
+								<div class="form-group">
+									<input type="text" class="form-control" name="change_username" placeholder="New username" autocomplete="off" style="width: 20vw">
+									<button type="submit" class="form-control btn btn-primary submit px-3">Change Username</button>
+								</div>
+								<p class="mb-4 text-center">Update Email</p>
+								<div class="form-group">
+									<input type="text" class="form-control" name="update_email" placeholder="New email" autocomplete="off" >
+									<button type="submit" class="form-control btn btn-primary submit px-3">Update Email</button>
+								</div>
+								<p class="mb-4 text-center">Change Password</p>
+								<div class="form-group">
+									<input id="password-field" type="password" class="form-control" name="update_password" placeholder="Password" >
+								</div>
+								<div class="form-group">
+									<input id="password-field" type="password" class="form-control" name="confirm_update_password" placeholder="Confirm Password">
+									<button type="submit" class="form-control btn btn-primary submit px-3">Update Password</button>
+								</div>
+					
+							</form>
+		
+						
+				</div>
+
+			</div>
 	</div>
 </section>
 {% endblock %}

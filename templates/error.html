@@ -2,10 +2,21 @@
 {% block title %}Index{% endblock %}
 {% block head %}{% endblock %}
 {% block content %}
+<div class="container">
+	<div class="row justify-content-center">
+		<div class="col-md-6 col-lg-4">
+			<div class="login-wrap p-0">
+				<h3 class="mb-4 text-center" style="color:red">Success!! <br> {{ message }}</h3>
+			</div>
+		</div>
+	</div>
+</div>
+
+
 <div style="display: flex; flex-direction:column; justify-content: center">
 	<div style="text-align: center"; >
-		<h2 class="heading-section" style="color: red">ERROR<br>{{ message }}</h2>
-		<p><a style="color: blue" href="/">RETURN</a></p>
+		<h2 class="heading-section" style="color: red">ERROR!<br>{{ message }}</h2>
+		<p><a style="color: blue" href="/diary">RETURN</a></p>
 	</div>
 	<div id="error"></div>
 </div>
